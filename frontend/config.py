@@ -2,7 +2,7 @@ import streamlit as st
 
 API_URL = "http://127.0.0.1:8000"
 
-# Colours
+# ── Design tokens ─────────────────────────────────────────────
 GOLD           = "#E9C46A"
 GOLD_DIM       = "#C9A44A"
 BG_BASE        = "#080808"
@@ -20,7 +20,17 @@ WARNING        = "#e0a060"
 INFO           = "#6098e0"
 PRIMARY        = GOLD
 
+PLOTLY_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(color=TEXT_PRIMARY, family="DM Sans, sans-serif"),
+    xaxis=dict(gridcolor=BG_RAISED, zerolinecolor=BG_RAISED),
+    yaxis=dict(gridcolor=BG_RAISED, zerolinecolor=BG_RAISED),
+    margin=dict(l=20, r=20, t=40, b=20),
+)
 
+
+# ── Page config ───────────────────────────────────────────────
 def page_setup(title="NitaRefund", layout="wide"):
     st.set_page_config(
         page_title=title,
@@ -31,11 +41,13 @@ def page_setup(title="NitaRefund", layout="wide"):
     inject_css()
 
 
+# ── Auth guard ────────────────────────────────────────────────
 def require_auth():
-    """Put this at the top of every protected page."""
     if not st.session_state.get("token"):
         st.switch_page("app.py")
 
+
+# ── CSS ───────────────────────────────────────────────────────
 def inject_css():
     st.markdown(f"""
     <style>
@@ -49,19 +61,14 @@ def inject_css():
     .stApp {{ background-color: {BG_BASE} !important; }}
     #MainMenu, footer, header {{ visibility: hidden !important; }}
     [data-testid="stSidebarNav"] {{ display: none !important; }}
-    [data-testid="collapsedControl"] {{ display: none !important; }}
 
-    section[data-testid="stSidebar"] {{
-        background-color: {BG_BASE} !important;
-        border-right: 1px solid {BORDER} !important;
-    }}
-
+    /* ── Main container ── */
     .main .block-container {{
         padding: 2rem 2.5rem !important;
         max-width: 1260px !important;
     }}
 
-    /* Stat cards */
+    /* ── Stat cards ── */
     .pl-stat {{
         background: {BG_RAISED};
         border: 1px solid {BORDER};
@@ -81,6 +88,8 @@ def inject_css():
     }}
     .pl-stat .stat-value {{
         font-size: 22px;
+        font-weight: 400;
+        color: {TEXT_PRIMARY};
         font-family: 'DM Serif Display', Georgia, serif;
         letter-spacing: -0.02em;
         line-height: 1;
@@ -92,7 +101,7 @@ def inject_css():
         margin-top: 6px;
     }}
 
-    /* Badges */
+    /* ── Badges ── */
     .badge {{
         display: inline-flex;
         align-items: center;
@@ -102,20 +111,21 @@ def inject_css():
         border-radius: 9999px;
         white-space: nowrap;
     }}
-    .badge-pending               {{ background:rgba(224,160,96,0.10); color:{WARNING}; border:1px solid rgba(224,160,96,0.22); }}
+    .badge-pending               {{ background:rgba(224,160,96,0.10);  color:{WARNING}; border:1px solid rgba(224,160,96,0.22); }}
     .badge-awaiting_confirmation {{ background:rgba(233,196,106,0.10); color:{GOLD};    border:1px solid rgba(233,196,106,0.22); }}
     .badge-approved              {{ background:rgba(96,152,224,0.10);  color:{INFO};    border:1px solid rgba(96,152,224,0.22); }}
     .badge-settled               {{ background:rgba(82,196,138,0.10);  color:{SUCCESS}; border:1px solid rgba(82,196,138,0.22); }}
+    .badge-auto_settled          {{ background:rgba(82,196,138,0.10);  color:{SUCCESS}; border:1px solid rgba(82,196,138,0.22); }}
     .badge-rejected              {{ background:rgba(224,96,96,0.10);   color:{DANGER};  border:1px solid rgba(224,96,96,0.22); }}
     .badge-cancelled             {{ background:rgba(120,120,120,0.10); color:#777;      border:1px solid rgba(120,120,120,0.22); }}
     .badge-disputed              {{ background:rgba(224,96,96,0.10);   color:{DANGER};  border:1px solid rgba(224,96,96,0.22); }}
 
-    /* Trust badges */
+    /* ── Trust badges ── */
     .trust-high {{ background:rgba(82,196,138,0.10);  color:{SUCCESS}; border:1px solid rgba(82,196,138,0.22);  border-radius:9999px; padding:2px 9px; font-size:11.5px; font-weight:500; }}
     .trust-mid  {{ background:rgba(233,196,106,0.10); color:{GOLD};    border:1px solid rgba(233,196,106,0.22); border-radius:9999px; padding:2px 9px; font-size:11.5px; font-weight:500; }}
     .trust-low  {{ background:rgba(224,96,96,0.10);   color:{DANGER};  border:1px solid rgba(224,96,96,0.22);   border-radius:9999px; padding:2px 9px; font-size:11.5px; font-weight:500; }}
 
-    /* Buttons */
+    /* ── Primary button ── */
     .stButton > button {{
         background: {GOLD} !important;
         color: #0a0a0a !important;
@@ -124,27 +134,44 @@ def inject_css():
         font-weight: 600 !important;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 14px !important;
-        width: 100% !important;
+        padding: 10px 20px !important;
         transition: all 160ms ease !important;
+        letter-spacing: -0.01em !important;
+        width: 100% !important;
     }}
     .stButton > button:hover {{
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(233,196,106,0.22) !important;
     }}
+    .stButton > button:active {{ transform: translateY(0) !important; }}
+
     .btn-ghost > button {{
         background: {BG_RAISED} !important;
         color: {TEXT_PRIMARY} !important;
         border: 1px solid {BORDER_HOVER} !important;
+        box-shadow: none !important;
+    }}
+    .btn-ghost > button:hover {{
+        background: {BG_HOVER} !important;
+        box-shadow: none !important;
+        transform: none !important;
     }}
     .btn-danger > button {{
         background: rgba(224,96,96,0.12) !important;
         color: {DANGER} !important;
         border: 1px solid rgba(224,96,96,0.28) !important;
+        box-shadow: none !important;
+    }}
+    .btn-danger > button:hover {{
+        background: rgba(224,96,96,0.20) !important;
+        box-shadow: none !important;
+        transform: none !important;
     }}
 
-    /* Inputs */
+    /* ── Inputs ── */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
+    .stDateInput > div > div > input,
     .stTextArea > div > textarea {{
         background: {BG_RAISED} !important;
         border: 1px solid {BORDER} !important;
@@ -152,26 +179,29 @@ def inject_css():
         border-radius: 9px !important;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 14px !important;
+        padding: 9px 12px !important;
     }}
-    .stTextInput > div > div > input:focus {{
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus {{
         border-color: rgba(233,196,106,0.40) !important;
         box-shadow: 0 0 0 3px rgba(233,196,106,0.07) !important;
     }}
     .stTextInput label, .stNumberInput label,
-    .stTextArea label, .stSelectbox label {{
+    .stDateInput label, .stTextArea label, .stSelectbox label {{
         font-size: 13px !important;
         font-weight: 500 !important;
         color: {TEXT_PRIMARY} !important;
     }}
 
-    /* Selectbox */
+    /* ── Selectbox ── */
     .stSelectbox > div > div {{
         background: {BG_RAISED} !important;
         border: 1px solid {BORDER} !important;
         border-radius: 9px !important;
+        color: {TEXT_PRIMARY} !important;
     }}
 
-    /* Tabs */
+    /* ── Tabs ── */
     .stTabs [data-baseweb="tab-list"] {{
         background: transparent !important;
         border-bottom: 1px solid {BORDER} !important;
@@ -181,17 +211,18 @@ def inject_css():
         background: transparent !important;
         color: {TEXT_SECONDARY} !important;
         border-radius: 0 !important;
-        padding: 10px 20px !important;
+        padding: 10px 22px !important;
         font-size: 14px !important;
+        font-family: 'DM Sans', sans-serif !important;
         font-weight: 500 !important;
     }}
     .stTabs [aria-selected="true"] {{
         color: {TEXT_PRIMARY} !important;
         border-bottom: 2px solid {GOLD} !important;
     }}
-    .stTabs [data-baseweb="tab-panel"] {{ padding: 0 !important; }}
+    .stTabs [data-baseweb="tab-panel"] {{ padding: 1rem 0 0 !important; }}
 
-    /* Expander */
+    /* ── Expander ── */
     .streamlit-expanderHeader {{
         background: {BG_SURFACE} !important;
         border: 1px solid {BORDER} !important;
@@ -207,15 +238,17 @@ def inject_css():
         padding: 16px 20px !important;
     }}
 
-    /* Alerts */
-    .stSuccess, .stError, .stWarning, .stInfo {{
-        border-radius: 9px !important;
-    }}
+    /* ── Alert messages ── */
+    .stSuccess {{ background: rgba(82,196,138,0.08)  !important; border-color: rgba(82,196,138,0.20)  !important; border-radius: 9px !important; }}
+    .stError   {{ background: rgba(224,96,96,0.08)   !important; border-color: rgba(224,96,96,0.20)   !important; border-radius: 9px !important; }}
+    .stWarning {{ background: rgba(224,160,96,0.08)  !important; border-color: rgba(224,160,96,0.20)  !important; border-radius: 9px !important; }}
+    .stInfo    {{ background: rgba(96,152,224,0.08)  !important; border-color: rgba(96,152,224,0.20)  !important; border-radius: 9px !important; }}
 
-    /* Page titles */
+    /* ── Page titles ── */
     .pl-title {{
         font-family: 'DM Serif Display', Georgia, serif;
         font-size: 30px;
+        color: {TEXT_PRIMARY};
         letter-spacing: -0.01em;
         line-height: 1.1;
         margin-bottom: 4px;
@@ -231,11 +264,133 @@ def inject_css():
         margin: 1.25rem 0;
     }}
 
-    ::-webkit-scrollbar       {{ width: 4px; height: 4px; }}
-    ::-webkit-scrollbar-track {{ background: transparent; }}
-    ::-webkit-scrollbar-thumb {{ background: {BORDER_HOVER}; border-radius: 2px; }}
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar        {{ width: 4px; height: 4px; }}
+    ::-webkit-scrollbar-track  {{ background: transparent; }}
+    ::-webkit-scrollbar-thumb  {{ background: {BORDER_HOVER}; border-radius: 2px; }}
+
+    /* ── Columns ── */
+    [data-testid="column"] {{ padding: 0 10px !important; }}
+    [data-testid="column"]:first-child {{ padding-left: 0 !important; }}
+    [data-testid="column"]:last-child  {{ padding-right: 0 !important; }}
+
+    /* ── Sidebar ── */
+    section[data-testid="stSidebar"] {{
+        background: linear-gradient(160deg, #0e0e0e 0%, {BG_BASE} 100%) !important;
+        border-right: 1px solid {BORDER} !important;
+        padding-top: 0 !important;
+    }}
+    section[data-testid="stSidebar"] > div {{
+        padding-top: 0 !important;
+    }}
+
+    /* Sidebar nav buttons */
+    section[data-testid="stSidebar"] .stButton > button {{
+        background: transparent !important;
+        color: {TEXT_SECONDARY} !important;
+        border: none !important;
+        border-radius: 8px !important;
+        text-align: left !important;
+        font-weight: 400 !important;
+        font-size: 14px !important;
+        padding: 9px 14px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        transform: none !important;
+        letter-spacing: 0 !important;
+        transition: background 120ms, color 120ms !important;
+    }}
+    section[data-testid="stSidebar"] .stButton > button:hover {{
+        background: {BG_RAISED} !important;
+        color: {TEXT_PRIMARY} !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }}
+    section[data-testid="stSidebar"] .nav-active > button {{
+        background: rgba(233,196,106,0.08) !important;
+        color: {GOLD} !important;
+        font-weight: 500 !important;
+    }}
+    section[data-testid="stSidebar"] .btn-ghost > button {{
+        background: transparent !important;
+        color: {TEXT_MUTED} !important;
+        border: none !important;
+        font-size: 13px !important;
+    }}
+    section[data-testid="stSidebar"] .btn-ghost > button:hover {{
+        background: {BG_RAISED} !important;
+        color: {DANGER} !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
+
+
+# ── Sidebar nav ───────────────────────────────────────────────
+def sidebar_nav(active=""):
+    with st.sidebar:
+        st.markdown(f"""
+        <div style="padding:1.5rem 1.2rem 0.75rem;">
+          <div style="font-family:'DM Serif Display',Georgia,serif;
+                      font-size:22px;color:{GOLD};
+                      letter-spacing:-0.01em;line-height:1;margin-bottom:6px;">
+            NitaRefund
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:6px;height:6px;border-radius:50%;
+                        background:{SUCCESS};"></div>
+            <span style="font-size:12px;color:{TEXT_MUTED};">
+              {st.session_state.get('username', '')}
+            </span>
+          </div>
+        </div>
+        <div style="border-top:1px solid {BORDER};margin:0 1rem 0.5rem;"></div>
+        <div style="font-size:10px;color:{TEXT_MUTED};text-transform:uppercase;
+                    letter-spacing:0.08em;padding:0 1.2rem 4px;">
+          Navigation
+        </div>
+        """, unsafe_allow_html=True)
+
+        pages = [
+            ("Dashboard",    "pages/1_Dashboard.py"),
+            ("Transactions", "pages/2_Transactions.py"),
+            ("Trust",        "pages/3_Trust.py"),
+            ("Groups",       "pages/4_Groups.py"),
+            ("Profile",      "pages/5_Profile.py"),
+        ]
+
+        for label, path in pages:
+            is_active = label == active
+            if is_active:
+                st.markdown('<div class="nav-active">', unsafe_allow_html=True)
+            if st.button(f"  {label}", key=f"nav_{label}"):
+                st.switch_page(path)
+            if is_active:
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="border-top:1px solid {BORDER};margin:0.5rem 1rem;"></div>
+        <div style="font-size:10px;color:{TEXT_MUTED};text-transform:uppercase;
+                    letter-spacing:0.08em;padding:0 1.2rem 4px;">
+          Quick Actions
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("＋  New Transaction", key="nav_new_tx"):
+            st.switch_page("pages/2_Transactions.py")
+
+        st.markdown(
+            f'<div style="border-top:1px solid {BORDER};margin:0.5rem 1rem 0.25rem;"></div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown('<div class="btn-ghost">', unsafe_allow_html=True)
+        if st.button(" Log out", key="nav_logout"):
+            st.session_state.clear()
+            st.switch_page("app.py")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ── UI helpers ────────────────────────────────────────────────
 
 def stat_card(label, value, sub="", accent=False):
     cls = "pl-stat accent" if accent else "pl-stat"
@@ -251,12 +406,9 @@ def stat_card(label, value, sub="", accent=False):
 
 def trust_badge(score: float) -> str:
     s = round(score)
-    if score >= 70:
-        return f'<span class="trust-high">↑ {s}</span>'
-    elif score >= 40:
-        return f'<span class="trust-mid">◆ {s}</span>'
-    else:
-        return f'<span class="trust-low">↓ {s}</span>'
+    if score >= 70:   return f'<span class="trust-high">↑ {s}</span>'
+    elif score >= 40: return f'<span class="trust-mid">◆ {s}</span>'
+    else:             return f'<span class="trust-low">↓ {s}</span>'
 
 
 def status_badge(status: str) -> str:

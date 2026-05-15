@@ -7,6 +7,12 @@ from config import (
 import api
 
 page_setup("NitaRefund · Sign In")
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] { display: none !important; }
+[data-testid="collapsedControl"]  { display: none !important; }
+</style>
+""", unsafe_allow_html=True)
 
 if st.session_state.get("token"):
     st.switch_page("pages/1_Dashboard.py")

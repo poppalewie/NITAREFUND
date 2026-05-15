@@ -35,3 +35,62 @@ def get_leaderboard(
     db: Session = Depends(get_db)
 ):
     return trust_query_service.leaderboard(db, limit=limit)
+
+@router.get("/me/history")
+def trust_history(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Returns daily average incoming trust score over time,
+    derived from when trust scores were last updated.
+    We approximate by looking at settled transaction dates.
+    """
+    from sqlalchemy import func, desc
+    from app.models import Transaction, TransactionStatus
+
+    settled = ["settled", "auto_settled"]
+
+    rows = (
+        db.query(
+            func.date(Transaction.settled_at).label("date"),
+            func.count(Transaction.id).label("count")
+        )
+        .filter(
+            Transaction.borrower_id == current_user.id,
+            Transaction.status.in_(settled),
+            Transaction.settled_at.isnot(None)
+        )
+        .group_by(func.date(Transaction.settled_at))
+        .order_by(func.date(Transaction.settled_at))
+        .all()
+    )
+
+    # Get current score
+    avg = db.query(
+        func.coalesce(func.avg(TrustScore.score), 50.0)
+    ).filter(TrustScore.user_b_id == current_user.id).scalar()
+
+    current_score = round(float(avg), 1)
+
+    # Build a simple trend: start at 50, move toward current score
+    # weighted by transaction count at each date
+    history = []
+    running = 50.0
+    total_txns = sum(r.count for r in rows) or 1
+
+    for row in rows:
+        weight = row.count / total_txns
+        running = running + (current_score - running) * weight
+        history.append({
+            "date":  str(row.date),
+            "score": round(running, 1),
+        })
+
+    # Always include current score as last point
+    if history:
+        history[-1]["score"] = current_score
+    else:
+        history = [{"date": "now", "score": current_score}]
+
+    return history

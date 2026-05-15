@@ -125,3 +125,13 @@ def list_users() -> list:
     r = get("/users/")
     r.raise_for_status()
     return r.json()
+
+def get_trust_history() -> list:
+    r = get("/trust/me/history")
+    r.raise_for_status()
+    return r.json()
+
+def get_my_groups() -> list:
+    r = get("/groups/")
+    r.raise_for_status()
+    return r.json()
