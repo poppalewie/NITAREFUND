@@ -38,55 +38,27 @@ def get_my_network(user_id: int, db: Session):
 
 def leaderboard(db: Session, limit: int = 10):
     """
-    Aggregate incoming trust scores, and count each user's transactions.
+    All users, ordered by their average incoming trust score.
+    Users with no scores yet default to 50.
     """
-    # Subquery: count transactions per user (as lender or borrower)
-    tx_count = (
-        db.query(
-            Transaction.lender_id.label("user_id"),
-            func.count().label("cnt")
-        )
-        .group_by(Transaction.lender_id)
-        .union_all(
-            db.query(
-                Transaction.borrower_id.label("user_id"),
-                func.count().label("cnt")
-            )
-            .group_by(Transaction.borrower_id)
-        )
-        .subquery()
-    )
-
-    tx_totals = (
-        db.query(
-            tx_count.c.user_id,
-            func.sum(tx_count.c.cnt).label("total")
-        )
-        .group_by(tx_count.c.user_id)
-        .subquery()
-    )
-
     results = (
         db.query(
-            TrustScore.user_b_id,
-            func.avg(TrustScore.score).label("avg_score"),
+            User.id,
             User.username,
-            func.coalesce(tx_totals.c.total, 0).label("tx_count")
+            func.coalesce(func.avg(TrustScore.score), 50.0).label("avg_score")
         )
-        .join(User, User.id == TrustScore.user_b_id)
-        .outerjoin(tx_totals, tx_totals.c.user_id == TrustScore.user_b_id)
-        .group_by(TrustScore.user_b_id, User.username, tx_totals.c.total)
-        .order_by(func.avg(TrustScore.score).desc())
+        .outerjoin(TrustScore, TrustScore.user_b_id == User.id)
+        .group_by(User.id, User.username)
+        .order_by(func.coalesce(func.avg(TrustScore.score), 50.0).desc())
         .limit(limit)
         .all()
     )
 
     return [
         {
-            "user_id":           r.user_b_id,
-            "username":          r.username,
-            "score":             float(r.avg_score),
-            "transaction_count": int(r.tx_count),
+            "user_id": r.id,
+            "username": r.username,
+            "score": float(r.avg_score),
         }
         for r in results
     ]

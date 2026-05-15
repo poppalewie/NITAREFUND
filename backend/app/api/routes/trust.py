@@ -30,5 +30,8 @@ def pair_trust(
 
 
 @router.get("/leaderboard")
-def get_leaderboard(db: Session = Depends(get_db)):
-    return trust_query_service.leaderboard(db)
+def get_leaderboard(
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    return trust_query_service.leaderboard(db, limit=limit)

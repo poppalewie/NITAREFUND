@@ -18,7 +18,19 @@ def load_leaderboard():
 board  = load_leaderboard()
 MEDALS = ["🥇", "🥈", "🥉"]
 
-left, gap, right = st.columns([10, 1, 11])
+def get_error(e) -> str:
+    """Pull a readable message out of a requests HTTPError."""
+    try:
+        body = e.response.json()
+        detail = body.get("detail", "An error occurred.")
+        # Validation errors come back as a list of dicts
+        if isinstance(detail, list):
+            return detail[0].get("msg", str(detail))
+        return str(detail)
+    except Exception:
+        return "Username or email already in use!!Try a different one"
+
+left, right = st.columns([10, 11], gap="large")
 
 # ═════════════════════════════════════════════════════════════
 # LEFT
@@ -64,9 +76,7 @@ with left:
                         st.session_state.username = username
                         st.rerun()
                     except Exception as e:
-                        msg = getattr(getattr(e, "response", None),
-                                      "json", lambda: {})()
-                        st.error(msg.get("detail", "Login failed. Check your credentials."))
+                        st.error(get_error(e))
 
         # ── Forgot password lives here, under Login only ──────
         st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -90,9 +100,8 @@ with left:
                             api.reset_password(fp_email, fp_ans, fp_new)
                             st.success("Password reset. You can now log in.")
                         except Exception as e:
-                            msg = getattr(getattr(e, "response", None),
-                                          "json", lambda: {})()
-                            st.error(msg.get("detail", "Reset failed."))
+            
+                            st.error(get_error(e))
 
     # ── REGISTER ──────────────────────────────────────────────
     with reg_tab:
@@ -112,8 +121,8 @@ with left:
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
         if st.button("Create Account", key="btn_register"):
-            if not all([r_user, r_email, r_pass]):
-                st.error("Username, email and password are required.")
+            if not all([r_user, r_email, r_pass, r_sec]):
+                st.error("Username, email , security answer and password are required.")
             else:
                 with st.spinner(""):
                     try:
@@ -122,19 +131,9 @@ with left:
                         st.session_state.username = r_user
                         st.rerun()
                     except Exception as e:
-                        msg = getattr(getattr(e, "response", None),
-                                      "json", lambda: {})()
-                        st.error(msg.get("detail", "Registration failed."))
+                        st.error(get_error(e))
 
 
-# ═════════════════════════════════════════════════════════════
-# GAP
-# ═════════════════════════════════════════════════════════════
-with gap:
-    st.markdown(
-        f'<div style="height:100vh;border-left:1px solid {BORDER};"></div>',
-        unsafe_allow_html=True,
-    )
 
 
 # ═════════════════════════════════════════════════════════════
